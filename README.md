@@ -2,7 +2,7 @@
 
 Show & Tell es un reproductor minimalista para presentar contenido educativo curado como una secuencia de eventos. Cada evento combina medios y contenido editorial con contexto semántico y temporal. Las sesiones seleccionan y ordenan eventos para una presentación; no tienen que incluir todo el catálogo.
 
-El proyecto está en fase de definición de producto y arquitectura. Este repositorio contiene documentación: todavía no hay aplicación ni scaffold.
+El proyecto avanza por etapas, con una primera estructura funcional intencionalmente mínima: persistencia local, dashboard de sesiones y reproductor en wireframe.
 
 ## Alcance inicial
 
@@ -16,18 +16,59 @@ La primera experiencia funcional prevista contempla:
 
 La edición de sesiones y contenido queda fuera del primer alcance de reproducción.
 
-## Stack definido
+## Stack y herramientas
 
 | Área | Decisión |
 | --- | --- |
 | Frontend | React y TypeScript, con Vite |
 | Backend | Python y FastAPI |
+| ORM y migraciones | SQLAlchemy 2 y Alembic |
 | Estilos | CSS Modules y tokens de diseño centralizados |
-| Componentes | Componentes propios; primitivas accesibles sin estilo, como Radix, solo cuando sean útiles |
+| Routing | React Router |
 | Persistencia | PostgreSQL local con Docker |
-| ORM, migraciones y contrato API | Pendientes de decisión |
+| Contrato API | REST/JSON bajo `/api` |
 
-Storybook y las herramientas de pruebas de componentes se consideran opciones para el desarrollo, pero su incorporación se decidirá al concretar el scaffold. No se ha aprobado una biblioteca visual con una estética prefabricada.
+## Estructura de datos inicial
+
+- Los grupos de cursos pueden anidarse; un curso pertenece a un grupo y contiene sesiones ordenadas.
+- Una sesión contiene hitos/eventos ordenados; cada hito contiene slides ordenados.
+- Las categorías tienen jerarquía propia y se asignan a hitos.
+- Las colecciones configurables y los medios del filesystem quedan fuera de esta primera estructura.
+
+El seed incluye un curso, cuatro sesiones y dos hitos con cuatro slides cada uno en la primera sesión. Las otras sesiones quedan vacías. El contenido es demostrativo y debe completarse con fuentes verificadas antes de usarlo como material educativo.
+
+## Desarrollo local
+
+Requisitos: Python 3.12+, Node.js 20+ y Docker Compose.
+
+1. Inicia PostgreSQL desde la raíz:
+
+   ```sh
+   docker-compose up -d db
+   ```
+
+2. Prepara y ejecuta la API:
+
+   ```sh
+   cd backend
+   cp .env.example .env
+   python -m venv .venv
+   . .venv/bin/activate
+   pip install -e .
+   alembic upgrade head
+   python -m app.seed
+   uvicorn app.main:app --reload
+   ```
+
+3. En otra terminal, ejecuta el frontend:
+
+   ```sh
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+La API expone `GET /api/health`, `GET /api/dashboard` y `GET /api/sessions/{id}`. El reproductor ocupa la ventana, usa un bloque gris en lugar de medios y permite navegar slides; el control Play está visible pero desactivado hasta definir el comportamiento de reproducción. No hay sincronización de archivos ni edición de contenido en esta etapa. Las credenciales de Compose son solo para desarrollo local.
 
 ## Documentación
 

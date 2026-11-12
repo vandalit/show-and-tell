@@ -1,0 +1,134 @@
+.page {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 100vh;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-left: 7rem;
+  padding-bottom: var(--space-2);
+}
+
+.context {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.context strong {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.timelinePlaceholder {
+  width: min(16rem, 35vw);
+  min-height: 2rem;
+  background: var(--color-block);
+}
+
+.hero {
+  display: flex;
+  align-items: end;
+  min-height: 55vh;
+  padding: clamp(1.25rem, 5vw, 4rem);
+  background: #292929;
+}
+
+.heroContent {
+  max-width: 52rem;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.summary {
+  max-width: 45rem;
+  color: #d0d0d0;
+  line-height: 1.55;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 4rem;
+  padding-top: var(--space-2);
+}
+
+.button,
+.details summary {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.position {
+  min-width: 5rem;
+  color: var(--color-muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.details {
+  position: relative;
+}
+
+.detailsPanel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 1;
+  width: min(26rem, 90vw);
+  max-height: 50vh;
+  overflow: auto;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  line-height: 1.5;
+}
+
+.back {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.error {
+  margin: auto;
+  color: #f0aaaa;
+}
+
+@media (max-width: 600px) {
+  .hero {
+    min-height: 60vh;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+  }
+
+  .topBar {
+    padding-left: 5.5rem;
+  }
+}

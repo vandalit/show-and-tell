@@ -1,0 +1,8 @@
+.message {
+  padding: var(--space-3);
+  color: var(--color-muted);
+}
+
+.error {
+  color: #f0aaaa;
+}

@@ -117,13 +117,31 @@ La estructura define regiones y jerarquía, no una maqueta visual final ni las d
 
 - **Frontend:** React y TypeScript, con Vite.
 - **Backend:** Python y FastAPI.
+- **ORM y migraciones:** SQLAlchemy 2 y Alembic.
 - **Estilos:** CSS Modules y tokens de diseño centralizados.
-- **Componentes:** componentes propios, utilizando primitivas accesibles sin estilo cuando aporten valor.
+- **Routing:** React Router.
 - **Persistencia:** PostgreSQL local, ejecutada con Docker.
+- **Comunicación:** API REST/JSON bajo `/api`.
 
-El stack de lenguajes y frameworks queda definido como **Python + FastAPI + React + TypeScript**. Vite se conserva como herramienta de desarrollo y compilación del frontend, según la decisión previa. Radix es una opción de primitivas accesibles, no una dependencia confirmada. Storybook y las herramientas de pruebas de componentes siguen por decidir al diseñar el scaffold. También quedan pendientes el ORM, la estrategia de migraciones y el contrato de comunicación entre frontend y backend.
+El stack queda definido como **Python + FastAPI + React + TypeScript**. Las decisiones de herramientas adicionales para esta primera estructura —Vite, SQLAlchemy, Alembic y React Router— fueron aprobadas para el scaffold. Storybook y herramientas de pruebas de componentes no forman parte de esta etapa.
 
-## 9. Evolución considerada, no comprometida para la primera versión
+## 9. Modelo de datos inicial
+
+La primera estructura relacional se mantiene explícita y pequeña:
+
+- `course_groups`: grupos de cursos con relación padre/hijo para representar jerarquías.
+- `courses`: cursos asociados a un grupo.
+- `sessions`: sesiones ordenadas por curso.
+- `milestones`: hitos/eventos ordenados dentro de una sesión.
+- `slides`: contenido ordenado dentro de un hito.
+- `categories`: taxonomía jerárquica independiente de la jerarquía de cursos.
+- `milestone_categories`: relación muchos-a-muchos entre hitos y categorías.
+
+La primera sesión contiene dos hitos y cuatro slides por hito. Se crean otras tres sesiones vacías. El seed demuestra esta estructura, no fija el contenido ni la taxonomía del producto. Las colecciones configurables y el almacenamiento/sincronización de medios quedan fuera del scaffold inicial.
+
+En esta etapa, la portada del reproductor es un bloque gris sin archivo multimedia. La navegación atrás/adelante opera sobre los ocho slides; Play se muestra desactivado hasta que se definan el avance automático y el comportamiento al final de la sesión.
+
+## 10. Evolución considerada, no comprometida para la primera versión
 
 - Editor de sesiones y herramientas CMS para crear, reorganizar y reclasificar contenido.
 - Taxonomía flexible con relaciones padre-hijo y posibles relaciones de grafo.
@@ -135,7 +153,7 @@ El stack de lenguajes y frameworks queda definido como **Python + FastAPI + Reac
 
 Estas ideas requieren definición y validación antes de incorporarse al alcance comprometido.
 
-## 10. Criterios de aceptación del primer hito de producto
+## 11. Criterios de aceptación del primer hito de producto
 
 El primer hito de producto se considerará definido cuando:
 
@@ -147,10 +165,11 @@ El primer hito de producto se considerará definido cuando:
 
 Los detalles de sincronización, validación de archivos y comportamiento ante conflictos deberán especificarse en el SDD antes de implementarse.
 
-## 11. Decisiones pendientes
+## 12. Decisiones pendientes
 
-- ORM, esquema de migraciones y límites de responsabilidad entre API y cliente.
-- Contrato de comunicación entre frontend y backend.
+- Evolución de colecciones configurables y relaciones reutilizables.
+- Modelo de medios y sincronización con filesystem.
+- Cobertura de pruebas automatizadas para API y componentes.
 - Formato, estructura y reglas de validación del contenido local.
 - Comportamiento exacto de sincronización y resolución de conflictos o eliminaciones.
 - Modelo de relaciones entre sesiones, eventos, categorías, etiquetas y periodos temporales.
@@ -159,6 +178,6 @@ Los detalles de sincronización, validación de archivos y comportamiento ante c
 - Alcance y permisos del CMS futuro.
 - Herramientas de desarrollo y pruebas que formarán parte del scaffold.
 
-## 12. Proceso de decisión
+## 13. Proceso de decisión
 
 Este PRD es una base inicial, no una autorización para implementar. Cada paso técnico y funcional se revisará con el usuario. Antes de implementar código, crear el scaffold o añadir dependencias, se debe solicitar aprobación explícita. Las decisiones confirmadas deben reflejarse en la documentación antes de pasar al siguiente paso.
