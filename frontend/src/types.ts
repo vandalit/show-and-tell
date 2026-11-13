@@ -71,3 +71,5 @@ export interface Course extends CourseSummary {
   project: Pick<ProjectSummary, "id" | "slug" | "name">;
   sessions: SessionSummary[];
 }
+
+export type ListViewMode = "grid" | "list";

@@ -11,7 +11,9 @@ La primera experiencia funcional prevista contempla:
 - Un dashboard de entrada con el listado de proyectos disponibles.
 - Un sidebar compacto con accesos a Dashboard, Vault y Colecciones; Vault y Colecciones son por ahora vistas vacías, sin modelo de datos propio.
 - Las vistas separan un encabezado reutilizable (breadcrumb, título y acciones) de su región de contenido.
-- Ordenamiento de proyectos por nombre o cantidad de cursos; búsqueda y filtros quedan como controles visuales pendientes.
+- El ordenamiento y la presentación grid/list se recuerdan independientemente para cada nivel de listado en `localStorage` (inicialmente A–Z y grid; las sesiones respetan el orden del curso); búsqueda y filtros quedan como controles visuales pendientes.
+- Los cursos se pueden ordenar por nombre o cantidad de sesiones; las sesiones, por el orden del curso, nombre o cantidad de slides.
+- El orden manual por drag-and-drop queda como un modo futuro independiente de los ordenamientos automáticos.
 - Navegación desde un proyecto a sus cursos, y desde un curso a sus sesiones.
 - La entrada a una sesión en modo de reproducción fullscreen.
 - Una composición wireframe en bloques grises para validar estructura, sin definir todavía la dirección visual.

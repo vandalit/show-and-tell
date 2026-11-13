@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import type { ListViewMode } from "../types";
 import styles from "./ListToolbar.module.css";
 
 export interface SortOption<Value extends string> {
@@ -12,9 +13,15 @@ interface ListToolbarProps<Value extends string> {
   sort: Value;
   sortOptions: SortOption<Value>[];
   onSortChange: (sort: Value) => void;
+  viewMode: ListViewMode;
+  onViewModeChange: (viewMode: ListViewMode) => void;
 }
 
-function ToolbarIcon({ name }: { name: "filter" | "search" | "sort" }) {
+function ToolbarIcon({
+  name,
+}: {
+  name: "filter" | "search" | "sort" | ListViewMode;
+}) {
   if (name === "filter") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -32,6 +39,28 @@ function ToolbarIcon({ name }: { name: "filter" | "search" | "sort" }) {
     );
   }
 
+  if (name === "grid") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
+        <rect x="13.5" y="3.5" width="7" height="7" rx="1" />
+        <rect x="3.5" y="13.5" width="7" height="7" rx="1" />
+        <rect x="13.5" y="13.5" width="7" height="7" rx="1" />
+      </svg>
+    );
+  }
+
+  if (name === "list") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 6h12M8 12h12M8 18h12" />
+        <circle cx="4" cy="6" r=".7" />
+        <circle cx="4" cy="12" r=".7" />
+        <circle cx="4" cy="18" r=".7" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M8 5v14m0 0-3-3m3 3 3-3M16 19V5m0 0-3 3m3-3 3 3" />
@@ -44,6 +73,8 @@ export default function ListToolbar<Value extends string,>({
   sort,
   sortOptions,
   onSortChange,
+  viewMode,
+  onViewModeChange,
 }: ListToolbarProps<Value>) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
@@ -120,6 +151,16 @@ export default function ListToolbar<Value extends string,>({
         disabled
       >
         <ToolbarIcon name="search" />
+      </button>
+      <button
+        className={styles.iconButton}
+        type="button"
+        aria-label="Cambiar presentación"
+        aria-pressed={viewMode === "list"}
+        title={viewMode === "grid" ? "Vista de cuadrícula" : "Vista de lista"}
+        onClick={() => onViewModeChange(viewMode === "grid" ? "list" : "grid")}
+      >
+        <ToolbarIcon name={viewMode} />
       </button>
       <div className={styles.sortContainer} ref={menuContainerRef}>
         <button

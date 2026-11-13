@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { getProjects } from "../api";
 import ListToolbar, { type SortOption } from "../components/ListToolbar";
+import CatalogItems, { type CatalogItem } from "../components/CatalogItems";
 import LoadState from "../components/LoadState";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
+import PreferenceStatus from "../components/PreferenceStatus";
+import useListPreferences from "../hooks/useListPreferences";
 import type { ProjectSummary } from "../types";
 import styles from "../components/CatalogCards.module.css";
+import { compareNames } from "../utils/sorting";
 
 type ProjectSort = "name-asc" | "name-desc" | "courses-desc" | "courses-asc";
 
@@ -16,11 +19,18 @@ const projectSortOptions: SortOption<ProjectSort>[] = [
   { value: "courses-desc", label: "Cantidad de cursos (mayor a menor)" },
   { value: "courses-asc", label: "Cantidad de cursos (menor a mayor)" },
 ];
+const projectSortValues = projectSortOptions.map((option) => option.value);
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>();
   const [error, setError] = useState<string>();
-  const [sort, setSort] = useState<ProjectSort>("name-asc");
+  const { preferences, updatePreferences, error: preferencesError } =
+    useListPreferences<ProjectSort>({
+      scope: "projects",
+      label: "proyectos",
+      defaultSort: "name-asc",
+      allowedSorts: projectSortValues,
+    });
 
   useEffect(() => {
     getProjects().then(setProjects).catch((cause: unknown) => {
@@ -29,10 +39,8 @@ export default function DashboardPage() {
   }, []);
 
   const sortedProjects = [...(projects ?? [])].sort((left, right) => {
-    const byName = left.name.localeCompare(right.name, "es", {
-      sensitivity: "base",
-    });
-    switch (sort) {
+    const byName = compareNames(left.name, right.name);
+    switch (preferences.sort) {
       case "name-desc":
         return -byName;
       case "courses-desc":
@@ -43,6 +51,14 @@ export default function DashboardPage() {
         return byName;
     }
   });
+  const projectItems: CatalogItem[] = sortedProjects.map((project) => ({
+    id: project.id,
+    title: project.name,
+    metadata: `${project.course_count} ${
+      project.course_count === 1 ? "curso" : "cursos"
+    }`,
+    to: `/projects/${project.id}`,
+  }));
 
   return (
     <>
@@ -51,30 +67,22 @@ export default function DashboardPage() {
         actions={
           <ListToolbar
             itemName="proyectos"
-            sort={sort}
+            sort={preferences.sort}
             sortOptions={projectSortOptions}
-            onSortChange={setSort}
+            onSortChange={(sort) => updatePreferences({ sort })}
+            viewMode={preferences.viewMode}
+            onViewModeChange={(viewMode) => updatePreferences({ viewMode })}
           />
         }
       />
       <PageContent label="Lista de proyectos">
+        <PreferenceStatus message={preferencesError} />
         {error || !projects ? (
           <LoadState error={error} />
         ) : sortedProjects.length === 0 ? (
           <p className={styles.empty}>No hay proyectos disponibles.</p>
         ) : (
-          <ul className={styles.grid}>
-            {sortedProjects.map((project) => (
-              <li key={project.id}>
-                <Link className={styles.card} to={`/projects/${project.id}`}>
-                  <span className={styles.cardTitle}>{project.name}</span>
-                  <span className={styles.meta}>
-                    {project.course_count} {project.course_count === 1 ? "curso" : "cursos"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <CatalogItems items={projectItems} viewMode={preferences.viewMode} />
         )}
       </PageContent>
     </>
