@@ -2,13 +2,14 @@
 
 Show & Tell es un reproductor minimalista para presentar contenido educativo curado como una secuencia de eventos. Cada evento combina medios y contenido editorial con contexto semántico y temporal. Las sesiones seleccionan y ordenan eventos para una presentación; no tienen que incluir todo el catálogo.
 
-El proyecto avanza por etapas, con una primera estructura funcional intencionalmente mínima: persistencia local, navegación desde proyectos hasta sesiones y reproductor en wireframe.
+El proyecto avanza por etapas, con una primera estructura funcional intencionalmente mínima: persistencia local, un shell compartido de navegación, vistas iniciales y un reproductor en wireframe.
 
 ## Alcance inicial
 
 La primera experiencia funcional prevista contempla:
 
 - Un dashboard de entrada con el listado de proyectos disponibles.
+- Un sidebar compacto con accesos a Dashboard, Vault y Colecciones; Vault y Colecciones son por ahora vistas vacías, sin modelo de datos propio.
 - Navegación desde un proyecto a sus cursos, y desde un curso a sus sesiones.
 - La entrada a una sesión en modo de reproducción fullscreen.
 - Una composición wireframe en bloques grises para validar estructura, sin definir todavía la dirección visual.

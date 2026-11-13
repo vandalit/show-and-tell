@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getProject } from "../api";
 import Breadcrumbs from "../components/Breadcrumbs";
-import CatalogLayout from "../components/CatalogLayout";
 import styles from "../components/CatalogCards.module.css";
 import LoadState from "../components/LoadState";
 import type { Project } from "../types";
@@ -23,7 +22,7 @@ export default function ProjectPage() {
   }, [projectId]);
 
   return (
-    <CatalogLayout>
+    <>
       {error || !project ? (
         <LoadState error={error} />
       ) : (
@@ -50,6 +49,6 @@ export default function ProjectPage() {
           )}
         </>
       )}
-    </CatalogLayout>
+    </>
   );
 }

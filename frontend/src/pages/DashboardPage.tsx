@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getProjects } from "../api";
 import LoadState from "../components/LoadState";
-import CatalogLayout from "../components/CatalogLayout";
 import type { ProjectSummary } from "../types";
 import styles from "../components/CatalogCards.module.css";
 
@@ -17,7 +16,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <CatalogLayout>
+    <>
       <h1 className={styles.heading}>Proyectos</h1>
       {error || !projects ? (
         <LoadState error={error} />
@@ -37,6 +36,6 @@ export default function DashboardPage() {
           ))}
         </ul>
       )}
-    </CatalogLayout>
+    </>
   );
 }

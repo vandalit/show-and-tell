@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getCourse } from "../api";
 import Breadcrumbs from "../components/Breadcrumbs";
-import CatalogLayout from "../components/CatalogLayout";
 import styles from "../components/CatalogCards.module.css";
 import LoadState from "../components/LoadState";
 import type { Course } from "../types";
@@ -23,7 +22,7 @@ export default function CoursePage() {
   }, [courseId]);
 
   return (
-    <CatalogLayout>
+    <>
       {error || !course ? (
         <LoadState error={error} />
       ) : (
@@ -56,6 +55,6 @@ export default function CoursePage() {
           )}
         </>
       )}
-    </CatalogLayout>
+    </>
   );
 }

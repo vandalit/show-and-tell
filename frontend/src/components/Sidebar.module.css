@@ -1,0 +1,70 @@
+.sideBar {
+  grid-column: 1;
+  grid-row: 2;
+  border-right: 1px solid var(--color-border);
+}
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.25rem;
+}
+
+.link {
+  position: relative;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  text-decoration: none;
+}
+
+.link:hover,
+.link:focus-visible,
+.active {
+  border-color: var(--color-border);
+}
+
+.link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.link::after {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: calc(100% + 0.5rem);
+  padding: 0.35rem 0.5rem;
+  color: var(--color-page);
+  background: var(--color-text);
+  border-radius: 0.25rem;
+  content: attr(data-tooltip);
+  font-size: 0.75rem;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease 550ms;
+  white-space: nowrap;
+}
+
+.link:hover::after,
+.link:focus-visible::after {
+  opacity: 1;
+}
+
+.link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
