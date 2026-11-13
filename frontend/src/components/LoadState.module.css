@@ -1,8 +1,195 @@
-.message {
-  padding: var(--space-3);
-  color: var(--color-muted);
+.loading {
+  width: 100%;
 }
 
-.error {
+.catalogSkeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-1);
+}
+
+.list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.catalogCard,
+.slideSkeleton {
+  display: grid;
+  align-content: center;
+  gap: var(--space-1);
+  min-height: 5rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+}
+
+.list .catalogCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.75rem;
+}
+
+.block {
+  display: block;
+  border-radius: 0.2rem;
+  background: linear-gradient(
+    100deg,
+    var(--color-block) 30%,
+    #414141 50%,
+    var(--color-block) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.cardTitle {
+  width: 68%;
+  height: 1rem;
+}
+
+.cardMeta {
+  width: 30%;
+  height: 0.75rem;
+  opacity: 0.7;
+}
+
+.detailSkeleton {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.detailSummary {
+  width: min(42rem, 90%);
+  height: 1.25rem;
+}
+
+.detailMeta {
+  width: min(22rem, 70%);
+  height: 0.85rem;
+  opacity: 0.7;
+}
+
+.slideSkeletons {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.slideTitle {
+  width: min(20rem, 75%);
+  height: 1rem;
+}
+
+.slideText,
+.slideTextShort {
+  width: 85%;
+  height: 0.75rem;
+  opacity: 0.7;
+}
+
+.slideTextShort {
+  width: 55%;
+}
+
+.playerSkeleton {
+  display: grid;
+  grid-template-rows: auto minmax(55vh, 1fr) auto;
+  min-height: calc(100vh - 3rem);
+  gap: var(--space-2);
+}
+
+.playerContext {
+  width: min(18rem, 50%);
+  height: 2rem;
+}
+
+.playerHero {
+  display: grid;
+  align-content: end;
+  gap: var(--space-2);
+  padding: clamp(1.25rem, 5vw, 4rem);
+  background: var(--color-panel);
+}
+
+.playerTitle {
+  width: min(34rem, 85%);
+  height: clamp(2rem, 5vw, 4rem);
+}
+
+.playerSummary {
+  width: min(42rem, 80%);
+  height: 1.1rem;
+}
+
+.playerControls {
+  justify-self: center;
+  width: min(24rem, 85%);
+  height: 2.5rem;
+}
+
+.errorPanel {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  max-width: 42rem;
+  padding: var(--space-3);
+  border: 1px solid #633b3b;
+  background: #211818;
+}
+
+.errorTitle,
+.errorMessage {
+  margin: 0;
+}
+
+.errorTitle {
   color: #f0aaaa;
+  font-weight: 600;
+}
+
+.errorMessage {
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.retryButton {
+  min-height: 2.5rem;
+  margin-top: var(--space-1);
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  cursor: pointer;
+}
+
+.retryButton:hover,
+.retryButton:focus-visible {
+  background: var(--color-block);
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.screenReaderOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
 }

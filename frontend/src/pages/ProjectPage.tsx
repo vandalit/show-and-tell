@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getProject } from "../api";
 import CatalogItems, { type CatalogItem } from "../components/CatalogItems";
@@ -6,10 +6,10 @@ import ListToolbar, { type SortOption } from "../components/ListToolbar";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
 import PreferenceStatus from "../components/PreferenceStatus";
+import useApiResource from "../hooks/useApiResource";
 import styles from "../components/CatalogCards.module.css";
 import LoadState from "../components/LoadState";
 import useListPreferences from "../hooks/useListPreferences";
-import type { Project } from "../types";
 import { compareNames } from "../utils/sorting";
 
 type CourseSort = "name-asc" | "name-desc" | "sessions-desc" | "sessions-asc";
@@ -24,8 +24,20 @@ const courseSortValues = courseSortOptions.map((option) => option.value);
 
 export default function ProjectPage() {
   const { projectId } = useParams();
-  const [project, setProject] = useState<Project>();
-  const [error, setError] = useState<string>();
+  const requestProject = useCallback(
+    (signal: AbortSignal) => {
+      if (!projectId) {
+        throw new Error("Falta el identificador del proyecto.");
+      }
+      return getProject(projectId, signal);
+    },
+    [projectId],
+  );
+  const { state, retry } = useApiResource(
+    projectId,
+    requestProject,
+    "Falta el identificador del proyecto.",
+  );
   const { preferences, updatePreferences, error: preferencesError } =
     useListPreferences<CourseSort>({
       scope: "courses",
@@ -34,17 +46,20 @@ export default function ProjectPage() {
       allowedSorts: courseSortValues,
     });
 
-  useEffect(() => {
-    if (!projectId) {
-      setError("Falta el identificador del proyecto.");
-      return;
-    }
-    getProject(projectId).then(setProject).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, [projectId]);
+  if (state.status !== "success") {
+    return (
+      <PageContent label="Estado del proyecto">
+        <LoadState
+          error={state.status === "error" ? state.error : undefined}
+          onRetry={retry}
+          variant="detail"
+        />
+      </PageContent>
+    );
+  }
 
-  const sortedCourses = [...(project?.courses ?? [])].sort((left, right) => {
+  const project = state.data;
+  const sortedCourses = [...project.courses].sort((left, right) => {
     const byName = compareNames(left.title, right.title);
     switch (preferences.sort) {
       case "name-desc":
@@ -65,14 +80,6 @@ export default function ProjectPage() {
     }`,
     to: `/courses/${course.id}`,
   }));
-
-  if (error || !project) {
-    return (
-      <PageContent label="Estado del proyecto">
-        <LoadState error={error} />
-      </PageContent>
-    );
-  }
 
   return (
     <>

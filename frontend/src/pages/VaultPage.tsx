@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { getItems } from "../api";
 import CatalogItems, { type CatalogItem } from "../components/CatalogItems";
 import ListToolbar, { type SortOption } from "../components/ListToolbar";
@@ -6,8 +6,8 @@ import LoadState from "../components/LoadState";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
 import PreferenceStatus from "../components/PreferenceStatus";
+import useApiResource from "../hooks/useApiResource";
 import useListPreferences from "../hooks/useListPreferences";
-import type { ItemSummary } from "../types";
 import { compareNames } from "../utils/sorting";
 import styles from "./VaultPage.module.css";
 import cardStyles from "../components/CatalogCards.module.css";
@@ -23,8 +23,8 @@ const itemSortOptions: SortOption<ItemSort>[] = [
 const itemSortValues = itemSortOptions.map((option) => option.value);
 
 export default function VaultPage() {
-  const [items, setItems] = useState<ItemSummary[]>();
-  const [error, setError] = useState<string>();
+  const requestItems = useCallback((signal: AbortSignal) => getItems(signal), []);
+  const { state, retry } = useApiResource("items", requestItems);
   const { preferences, updatePreferences, error: preferencesError } =
     useListPreferences<ItemSort>({
       scope: "vault-items",
@@ -33,13 +33,8 @@ export default function VaultPage() {
       allowedSorts: itemSortValues,
     });
 
-  useEffect(() => {
-    getItems().then(setItems).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, []);
-
-  const sortedItems = [...(items ?? [])].sort((left, right) => {
+  const items = state.status === "success" ? state.data : [];
+  const sortedItems = [...items].sort((left, right) => {
     const byName = compareNames(left.title, right.title);
     switch (preferences.sort) {
       case "name-desc":
@@ -88,8 +83,12 @@ export default function VaultPage() {
       />
       <PageContent label="Inventario del Vault">
         <PreferenceStatus message={preferencesError} />
-        {error || !items ? (
-          <LoadState error={error} />
+        {state.status !== "success" ? (
+          <LoadState
+            error={state.status === "error" ? state.error : undefined}
+            onRetry={retry}
+            viewMode={preferences.viewMode}
+          />
         ) : sortedItems.length === 0 ? (
           <p className={cardStyles.empty}>El Vault todavía no tiene items.</p>
         ) : (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getCourse } from "../api";
 import CatalogItems, { type CatalogItem } from "../components/CatalogItems";
@@ -6,10 +6,10 @@ import ListToolbar, { type SortOption } from "../components/ListToolbar";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
 import PreferenceStatus from "../components/PreferenceStatus";
+import useApiResource from "../hooks/useApiResource";
 import styles from "../components/CatalogCards.module.css";
 import LoadState from "../components/LoadState";
 import useListPreferences from "../hooks/useListPreferences";
-import type { Course } from "../types";
 import { compareNames } from "../utils/sorting";
 
 type SessionSort =
@@ -30,8 +30,20 @@ const sessionSortValues = sessionSortOptions.map((option) => option.value);
 
 export default function CoursePage() {
   const { courseId } = useParams();
-  const [course, setCourse] = useState<Course>();
-  const [error, setError] = useState<string>();
+  const requestCourse = useCallback(
+    (signal: AbortSignal) => {
+      if (!courseId) {
+        throw new Error("Falta el identificador del curso.");
+      }
+      return getCourse(courseId, signal);
+    },
+    [courseId],
+  );
+  const { state, retry } = useApiResource(
+    courseId,
+    requestCourse,
+    "Falta el identificador del curso.",
+  );
   const { preferences, updatePreferences, error: preferencesError } =
     useListPreferences<SessionSort>({
       scope: "sessions",
@@ -40,17 +52,20 @@ export default function CoursePage() {
       allowedSorts: sessionSortValues,
     });
 
-  useEffect(() => {
-    if (!courseId) {
-      setError("Falta el identificador del curso.");
-      return;
-    }
-    getCourse(courseId).then(setCourse).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, [courseId]);
+  if (state.status !== "success") {
+    return (
+      <PageContent label="Estado del curso">
+        <LoadState
+          error={state.status === "error" ? state.error : undefined}
+          onRetry={retry}
+          variant="detail"
+        />
+      </PageContent>
+    );
+  }
 
-  const sortedSessions = [...(course?.sessions ?? [])].sort((left, right) => {
+  const course = state.data;
+  const sortedSessions = [...course.sessions].sort((left, right) => {
     const byName = compareNames(left.title, right.title);
     switch (preferences.sort) {
       case "position-asc":
@@ -73,14 +88,6 @@ export default function CoursePage() {
     }`,
     to: `/sessions/${session.id}`,
   }));
-
-  if (error || !course) {
-    return (
-      <PageContent label="Estado del curso">
-        <LoadState error={error} />
-      </PageContent>
-    );
-  }
 
   return (
     <>

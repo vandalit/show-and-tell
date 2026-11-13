@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { getProjects } from "../api";
 import ListToolbar, { type SortOption } from "../components/ListToolbar";
 import CatalogItems, { type CatalogItem } from "../components/CatalogItems";
@@ -6,8 +6,8 @@ import LoadState from "../components/LoadState";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
 import PreferenceStatus from "../components/PreferenceStatus";
+import useApiResource from "../hooks/useApiResource";
 import useListPreferences from "../hooks/useListPreferences";
-import type { ProjectSummary } from "../types";
 import styles from "../components/CatalogCards.module.css";
 import { compareNames } from "../utils/sorting";
 
@@ -22,8 +22,11 @@ const projectSortOptions: SortOption<ProjectSort>[] = [
 const projectSortValues = projectSortOptions.map((option) => option.value);
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<ProjectSummary[]>();
-  const [error, setError] = useState<string>();
+  const requestProjects = useCallback(
+    (signal: AbortSignal) => getProjects(signal),
+    [],
+  );
+  const { state, retry } = useApiResource("projects", requestProjects);
   const { preferences, updatePreferences, error: preferencesError } =
     useListPreferences<ProjectSort>({
       scope: "projects",
@@ -32,13 +35,8 @@ export default function DashboardPage() {
       allowedSorts: projectSortValues,
     });
 
-  useEffect(() => {
-    getProjects().then(setProjects).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, []);
-
-  const sortedProjects = [...(projects ?? [])].sort((left, right) => {
+  const projects = state.status === "success" ? state.data : [];
+  const sortedProjects = [...projects].sort((left, right) => {
     const byName = compareNames(left.name, right.name);
     switch (preferences.sort) {
       case "name-desc":
@@ -77,8 +75,12 @@ export default function DashboardPage() {
       />
       <PageContent label="Lista de proyectos">
         <PreferenceStatus message={preferencesError} />
-        {error || !projects ? (
-          <LoadState error={error} />
+        {state.status !== "success" ? (
+          <LoadState
+            error={state.status === "error" ? state.error : undefined}
+            onRetry={retry}
+            viewMode={preferences.viewMode}
+          />
         ) : sortedProjects.length === 0 ? (
           <p className={styles.empty}>No hay proyectos disponibles.</p>
         ) : (

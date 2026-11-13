@@ -1,36 +1,43 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getItem } from "../api";
 import LoadState from "../components/LoadState";
 import PageContent from "../components/PageContent";
 import PageHeader from "../components/PageHeader";
-import type { Item } from "../types";
+import useApiResource from "../hooks/useApiResource";
 import styles from "./ItemPage.module.css";
 import cards from "../components/CatalogCards.module.css";
 
 export default function ItemPage() {
   const { itemId } = useParams();
-  const [item, setItem] = useState<Item>();
-  const [error, setError] = useState<string>();
+  const requestItem = useCallback(
+    (signal: AbortSignal) => {
+      if (!itemId) {
+        throw new Error("Falta el identificador del item.");
+      }
+      return getItem(itemId, signal);
+    },
+    [itemId],
+  );
+  const { state, retry } = useApiResource(
+    itemId,
+    requestItem,
+    "Falta el identificador del item.",
+  );
 
-  useEffect(() => {
-    if (!itemId) {
-      setError("Falta el identificador del item.");
-      return;
-    }
-    getItem(itemId).then(setItem).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, [itemId]);
-
-  if (error || !item) {
+  if (state.status !== "success") {
     return (
       <PageContent label="Estado del item">
-        <LoadState error={error} />
+        <LoadState
+          error={state.status === "error" ? state.error : undefined}
+          onRetry={retry}
+          variant="detail"
+        />
       </PageContent>
     );
   }
 
+  const item = state.data;
   return (
     <>
       <PageHeader

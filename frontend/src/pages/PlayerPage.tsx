@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getSession } from "../api";
 import Breadcrumbs from "../components/Breadcrumbs";
 import LoadState from "../components/LoadState";
-import type { LearningSession, Slide } from "../types";
+import useApiResource from "../hooks/useApiResource";
+import type { Slide } from "../types";
 import styles from "./PlayerPage.module.css";
 
 interface PlayerItem {
@@ -14,20 +15,23 @@ interface PlayerItem {
 
 export default function PlayerPage() {
   const { sessionId } = useParams();
-  const [session, setSession] = useState<LearningSession>();
-  const [error, setError] = useState<string>();
+  const requestSession = useCallback(
+    (signal: AbortSignal) => {
+      if (!sessionId) {
+        throw new Error("Falta el identificador de sesión.");
+      }
+      return getSession(sessionId, signal);
+    },
+    [sessionId],
+  );
+  const { state, retry } = useApiResource(
+    sessionId,
+    requestSession,
+    "Falta el identificador de sesión.",
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    if (!sessionId) {
-      setError("Falta el identificador de sesión.");
-      return;
-    }
-    getSession(sessionId).then(setSession).catch((cause: unknown) => {
-      setError(cause instanceof Error ? cause.message : "Error inesperado");
-    });
-  }, [sessionId]);
-
+  const session = state.status === "success" ? state.data : undefined;
   const items = useMemo<PlayerItem[]>(
     () =>
       session?.items.flatMap(({ item }) =>
@@ -52,13 +56,17 @@ export default function PlayerPage() {
       ]
     : [];
 
-  if (error || !session) {
+  if (!session) {
     return (
       <main className={styles.page}>
         <div className={styles.navigation}>
           <Link to="/">← Proyectos</Link>
         </div>
-        <LoadState error={error} />
+        <LoadState
+          error={state.status === "error" ? state.error : undefined}
+          onRetry={retry}
+          variant="player"
+        />
       </main>
     );
   }
