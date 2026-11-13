@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import get_db
 from app.main import app
-from app.models import Base, Category, Course, LearningSession, Milestone, Project, Slide
+from app.models import Base, Category, Course, Item, LearningSession, Project, SessionItem, Slide
 
 
 @pytest.fixture
@@ -36,15 +36,22 @@ def client():
             position=0,
             course=course,
         )
+        second_session = LearningSession(
+            slug="session-2",
+            title="Session 2",
+            position=1,
+            course=course,
+        )
         category = Category(slug="category", name="Category")
-        milestone = Milestone(
-            slug="milestone",
-            title="Milestone",
-            position=0,
-            session=session,
+        item = Item(
+            slug="item",
+            title="Item",
+            summary="Item summary",
             categories=[category],
         )
-        milestone.slides.extend(
+        session.session_items.append(SessionItem(item=item, position=0))
+        second_session.session_items.append(SessionItem(item=item, position=0))
+        item.slides.extend(
             [
                 Slide(title="Slide 1", position=0),
                 Slide(title="Slide 2", position=1),
@@ -99,9 +106,45 @@ def test_player_returns_ordered_slides_and_categories(client: TestClient) -> Non
     response = client.get(f"/api/sessions/{session_id}")
 
     assert response.status_code == 200
-    milestone = response.json()["milestones"][0]
-    assert [slide["title"] for slide in milestone["slides"]] == ["Slide 1", "Slide 2"]
-    assert milestone["categories"][0]["name"] == "Category"
+    item = response.json()["items"][0]["item"]
+    assert item["title"] == "Item"
+    assert [slide["title"] for slide in item["slides"]] == ["Slide 1", "Slide 2"]
+    assert item["categories"][0]["name"] == "Category"
+
+
+def test_vault_lists_items_and_item_detail(client: TestClient) -> None:
+    response = client.get("/api/items")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    item_summary = response.json()[0]
+    assert item_summary["title"] == "Item"
+    assert item_summary["slide_count"] == 2
+
+    item_response = client.get(f"/api/items/{item_summary['id']}")
+
+    assert item_response.status_code == 200
+    assert [slide["title"] for slide in item_response.json()["slides"]] == [
+        "Slide 1",
+        "Slide 2",
+    ]
+
+
+def test_sessions_can_reuse_the_same_item(client: TestClient) -> None:
+    project = next(
+        project
+        for project in client.get("/api/projects").json()
+        if project["name"] == "Project"
+    )
+    course = client.get(f"/api/projects/{project['id']}").json()["courses"][0]
+    sessions = client.get(f"/api/courses/{course['id']}").json()["sessions"]
+
+    assert [session["slide_count"] for session in sessions] == [2, 2]
+    item_ids = [
+        client.get(f"/api/sessions/{session['id']}").json()["items"][0]["item"]["id"]
+        for session in sessions
+    ]
+    assert item_ids[0] == item_ids[1]
 
 
 def test_player_returns_not_found_for_unknown_session(client: TestClient) -> None:

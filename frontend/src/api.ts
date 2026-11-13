@@ -1,4 +1,11 @@
-import type { Course, LearningSession, Project, ProjectSummary } from "./types";
+import type {
+  Course,
+  Item,
+  ItemSummary,
+  LearningSession,
+  Project,
+  ProjectSummary,
+} from "./types";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -12,6 +19,14 @@ async function getJson<T>(path: string): Promise<T> {
 
 export function getProjects(): Promise<ProjectSummary[]> {
   return getJson("/api/projects");
+}
+
+export function getItems(): Promise<ItemSummary[]> {
+  return getJson("/api/items");
+}
+
+export function getItem(itemId: string): Promise<Item> {
+  return getJson(`/api/items/${itemId}`);
 }
 
 export function getProject(projectId: string): Promise<Project> {

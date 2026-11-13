@@ -8,12 +8,16 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.config import settings
 from app.database import get_db
-from app.models import Course, LearningSession, Milestone, Project
+from app.models import Course, Item, LearningSession, Project, SessionItem
 from app.schemas import (
+    CourseBreadcrumbRead,
     CourseRead,
     CourseSummaryRead,
+    ItemRead,
+    ItemSummaryRead,
     ProjectRead,
     ProjectSummaryWithCourseCountRead,
+    SessionItemRead,
     SessionRead,
 )
 
@@ -54,6 +58,36 @@ def list_projects(
     ]
 
 
+@app.get("/api/items", response_model=list[ItemSummaryRead])
+def list_items(db: Annotated[Session, Depends(get_db)]) -> list[ItemSummaryRead]:
+    items = db.scalars(
+        select(Item).options(selectinload(Item.slides)).order_by(Item.title)
+    ).all()
+    return [
+        ItemSummaryRead(
+            id=item.id,
+            slug=item.slug,
+            title=item.title,
+            summary=item.summary,
+            slide_count=len(item.slides),
+        )
+        for item in items
+    ]
+
+
+@app.get("/api/items/{item_id}", response_model=ItemRead)
+def get_item(item_id: UUID, db: Annotated[Session, Depends(get_db)]) -> ItemRead:
+    statement = (
+        select(Item)
+        .where(Item.id == item_id)
+        .options(selectinload(Item.slides), selectinload(Item.categories))
+    )
+    item = db.scalar(statement)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return ItemRead.model_validate(item)
+
+
 @app.get("/api/projects/{project_id}", response_model=ProjectRead)
 def get_project(
     project_id: UUID, db: Annotated[Session, Depends(get_db)]
@@ -91,8 +125,9 @@ def get_course(course_id: UUID, db: Annotated[Session, Depends(get_db)]) -> Cour
         .options(
             selectinload(Course.project),
             selectinload(Course.sessions)
-            .selectinload(LearningSession.milestones)
-            .selectinload(Milestone.slides),
+            .selectinload(LearningSession.session_items)
+            .selectinload(SessionItem.item)
+            .selectinload(Item.slides),
         )
     )
     course = db.scalar(statement)
@@ -111,7 +146,8 @@ def get_course(course_id: UUID, db: Annotated[Session, Depends(get_db)]) -> Cour
                 "title": session.title,
                 "position": session.position,
                 "slide_count": sum(
-                    len(milestone.slides) for milestone in session.milestones
+                    len(association.item.slides)
+                    for association in session.session_items
                 ),
             }
             for session in sorted(course.sessions, key=lambda item: item.position)
@@ -122,19 +158,35 @@ def get_course(course_id: UUID, db: Annotated[Session, Depends(get_db)]) -> Cour
 @app.get("/api/sessions/{session_id}", response_model=SessionRead)
 def get_session(
     session_id: UUID, db: Annotated[Session, Depends(get_db)]
-) -> LearningSession:
+) -> SessionRead:
     statement = (
         select(LearningSession)
         .where(LearningSession.id == session_id)
         .options(
-            selectinload(LearningSession.milestones)
-            .selectinload(Milestone.slides),
-            selectinload(LearningSession.milestones)
-            .selectinload(Milestone.categories),
+            selectinload(LearningSession.session_items)
+            .selectinload(SessionItem.item)
+            .selectinload(Item.slides),
+            selectinload(LearningSession.session_items)
+            .selectinload(SessionItem.item)
+            .selectinload(Item.categories),
             selectinload(LearningSession.course).selectinload(Course.project),
         )
     )
     session = db.scalar(statement)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
-    return session
+    return SessionRead(
+        id=session.id,
+        slug=session.slug,
+        title=session.title,
+        description=session.description,
+        position=session.position,
+        items=[
+            SessionItemRead(
+                position=association.position,
+                item=ItemRead.model_validate(association.item),
+            )
+            for association in session.session_items
+        ],
+        course=CourseBreadcrumbRead.model_validate(session.course),
+    )

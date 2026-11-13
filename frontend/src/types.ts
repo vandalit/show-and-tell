@@ -12,13 +12,26 @@ export interface Category {
   slug: string;
 }
 
-export interface Milestone {
+export interface Item {
   id: string;
+  slug: string;
   title: string;
   summary: string;
-  position: number;
   categories: Category[];
   slides: Slide[];
+}
+
+export interface ItemSummary {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  slide_count: number;
+}
+
+export interface SessionItem {
+  position: number;
+  item: Item;
 }
 
 export interface LearningSession {
@@ -27,7 +40,7 @@ export interface LearningSession {
   title: string;
   description: string;
   position: number;
-  milestones: Milestone[];
+  items: SessionItem[];
   course: {
     id: string;
     title: string;

@@ -6,6 +6,7 @@ import CoursePage from "./pages/CoursePage";
 import PlayerPage from "./pages/PlayerPage";
 import VaultPage from "./pages/VaultPage";
 import CollectionsPage from "./pages/CollectionsPage";
+import ItemPage from "./pages/ItemPage";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/vault" element={<VaultPage />} />
+        <Route path="/vault/items/:itemId" element={<ItemPage />} />
         <Route path="/collections" element={<CollectionsPage />} />
         <Route path="/projects/:projectId" element={<ProjectPage />} />
         <Route path="/courses/:courseId" element={<CoursePage />} />

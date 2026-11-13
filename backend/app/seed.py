@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database import SessionLocal
-from app.models import Category, Course, LearningSession, Milestone, Project, Slide
+from app.models import Category, Course, Item, LearningSession, Project, SessionItem, Slide
 
 
 def get_or_create(model, defaults: dict, **filters):
@@ -114,7 +114,7 @@ def seed() -> None:
             slug=slug,
         )
 
-    milestone_specs = [
+    item_specs = [
         {
             "slug": "nvidia-liderazgo-y-mercado",
             "title": "NVIDIA: liderazgo y posibles efectos en el mercado",
@@ -143,29 +143,28 @@ def seed() -> None:
         },
     ]
 
-    for spec in milestone_specs:
-        milestone_id = get_or_create(
-            Milestone,
+    for spec in item_specs:
+        item_id = get_or_create(
+            Item,
             {
                 "slug": spec["slug"],
                 "title": spec["title"],
                 "summary": spec["summary"],
-                "position": spec["position"],
-                "session_id": session_ids["sesion-01"],
             },
             slug=spec["slug"],
         )
 
         with SessionLocal() as db:
-            milestone = db.get(Milestone, milestone_id)
+            item = db.get(Item, item_id)
+            session = db.get(LearningSession, session_ids["sesion-01"])
             for category_slug in spec["category_slugs"]:
                 category = db.get(Category, category_ids[category_slug])
-                if category not in milestone.categories:
-                    milestone.categories.append(category)
+                if category not in item.categories:
+                    item.categories.append(category)
             for position, (title, summary) in enumerate(spec["slides"]):
                 slide = db.scalar(
                     select(Slide).where(
-                        Slide.milestone_id == milestone_id,
+                        Slide.item_id == item_id,
                         Slide.position == position,
                     )
                 )
@@ -176,9 +175,23 @@ def seed() -> None:
                             summary=summary,
                             body="Contenido de demostración. Completar con información y fuentes verificadas antes de usar en clase.",
                             position=position,
-                            milestone_id=milestone_id,
+                            item_id=item_id,
                         )
                     )
+            session_item = next(
+                (
+                    association
+                    for association in session.session_items
+                    if association.item_id == item_id
+                ),
+                None,
+            )
+            if session_item is None:
+                session.session_items.append(
+                    SessionItem(item=item, position=spec["position"])
+                )
+            else:
+                session_item.position = spec["position"]
             db.commit()
 
 

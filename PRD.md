@@ -5,14 +5,14 @@
 
 ## 1. Visión del producto
 
-Show & Tell es un reproductor de contenido educativo curado para presentar noticias, acontecimientos y referencias de forma expositiva. Una sesión reúne una selección ordenada de eventos que se pueden recorrer durante una clase. La experiencia prioriza el contenido, su contexto semántico y su posición temporal, sin exigir que el presentador recorra todo el catálogo.
+Show & Tell es un reproductor de contenido educativo curado para presentar noticias, acontecimientos y referencias de forma expositiva. Una sesión reúne una selección ordenada de items reutilizables que se pueden recorrer durante una clase. La experiencia prioriza el contenido, su contexto semántico y su posición temporal, sin exigir que el presentador recorra todo el catálogo.
 
 El sistema tendrá dos modos de producto:
 
 1. **Gestión:** mantener contenido, clasificación y sesiones.
 2. **Reproducción:** presentar una sesión en una interfaz fullscreen.
 
-El alcance inicial se enfoca en persistencia, clasificación representada en un dashboard y reproducción de sesiones. La edición de contenido y sesiones queda reservada para una etapa posterior.
+El alcance inicial se enfoca en persistencia, navegación por proyectos/cursos/sesiones, un Vault de consulta para items reutilizables y reproducción de sesiones. La creación y edición de contenido y sesiones queda reservada para una etapa posterior.
 
 ## 2. Usuarios y necesidades
 
@@ -22,21 +22,19 @@ Una persona docente que prepara y presenta contenido educativo.
 
 ### Necesidades
 
-- Seleccionar y ordenar un conjunto de eventos para una sesión.
-- Presentar cada evento con una imagen o video, un titular y una bajada legibles.
+- Seleccionar y ordenar un conjunto de items para una sesión.
+- Presentar cada item con una imagen o video, un titular y una bajada legibles.
 - Mantener visible el contexto temático y temporal del evento.
 - Acceder a información ampliada sin mostrarla por defecto.
 - Administrar el contenido localmente con poca fricción y conservarlo de forma persistente.
 
 ## 3. Conceptos del dominio
 
-- **Evento:** unidad de contenido con medios, texto editorial, clasificación y contexto temporal. Puede incluir titular, bajada, descripción y cuerpo. La descripción y el cuerpo estarán ocultos por defecto durante la reproducción.
-- **Sesión:** selección ordenada de eventos que se presenta como una unidad. Puede reutilizar eventos de otras sesiones.
-- **Taxonomía:** estructura configurable de conceptos y categorías para clasificar y explorar eventos. Puede tener niveles como categoría, subcategoría y concepto específico; no debe depender de una lista fija codificada en la interfaz.
+- **Item (evento/highlight):** unidad de contenido identificada y reutilizable, con título, resumen, categorías y una secuencia ordenada de slides. Puede incluir medios y contexto temporal en etapas posteriores.
+- **Sesión:** selección ordenada de items que se presenta como una unidad. Puede reutilizar el mismo item en varias sesiones; el orden pertenece a la relación sesión-item.
+- **Taxonomía:** estructura de categorías jerárquicas para clasificar y explorar items. No debe depender de una lista fija codificada en la interfaz.
 - **Contexto temporal:** fechas o periodos asociados a un evento, representados como calendario para periodos contemporáneos o como línea temporal para referencias históricas.
-- **Biblioteca local:** directorios de archivos multimedia y contenido asociados inicialmente a los eventos.
-
-Estos conceptos describen el producto; no prescriben todavía un esquema de base de datos.
+- **Biblioteca local:** directorios de archivos multimedia y contenido asociados inicialmente a los items.
 
 ## 4. Alcance inicial
 
@@ -45,19 +43,20 @@ Estos conceptos describen el producto; no prescriben todavía un esquema de base
 - Persistencia local con PostgreSQL, ejecutada mediante Docker.
 - Un dashboard de entrada que muestre los proyectos disponibles.
 - Navegación desde un proyecto a sus cursos, desde un curso a sus sesiones y desde una sesión a reproducción.
+- Un Vault de solo lectura que liste items, permita inspeccionar sus slides y deje visible un control inactivo para agregar items.
 - Una vista de reproducción fullscreen, inicialmente como wireframe de bloques grises.
-- Recorrido secuencial de los eventos de la sesión mediante controles anterior y siguiente.
+- Recorrido secuencial de los items de la sesión y sus slides mediante controles anterior y siguiente.
 - Presentación de imagen de portada, titular y bajada.
 - Controles de reproducción y acceso a detalles ampliados.
 - Contexto semántico en la esquina superior izquierda.
 - Contexto temporal en la esquina superior derecha.
 - Una franja inferior compacta para los controles de navegación, reproducción y acceso a detalles.
-- Fechas y rangos de fechas asociados a los eventos, almacenados como datos y no como recursos gráficos específicos.
+- Fechas y rangos de fechas asociados a los items, almacenados como datos y no como recursos gráficos específicos.
 - Una estructura modular que mantenga los componentes de presentación separados de los datos que consumen.
 
 ### Fuera del alcance inicial
 
-- Interfaz de edición de sesiones o eventos.
+- Interfaz de edición de sesiones o items.
 - Diseño visual final, identidad gráfica y selección de tipografía.
 - Una taxonomía educativa definitiva.
 - Editor visual de grafos o constructor de flujos de datos.
@@ -72,26 +71,30 @@ Estos conceptos describen el producto; no prescriben todavía un esquema de base
 - **RF-01:** el sistema debe presentar los proyectos disponibles como nivel inicial de navegación.
 - **RF-02:** el usuario debe poder navegar desde un proyecto a sus cursos y desde un curso a sus sesiones.
 - **RF-03:** el usuario debe poder abrir una sesión para reproducirla.
-- **RF-04:** la reproducción debe respetar el orden de eventos definido para esa sesión.
-- **RF-05:** una sesión puede reutilizar eventos que aparezcan en otras sesiones.
+- **RF-04:** la reproducción debe respetar el orden de items definido para esa sesión y el orden de slides definido para cada item.
+- **RF-05:** una sesión puede reutilizar items que aparezcan en otras sesiones.
 
 ### Reproducción
 
 - **RF-06:** la sesión se presenta en una vista fullscreen.
-- **RF-07:** cada evento muestra una imagen de portada como medio predeterminado, junto con un titular y una bajada.
+- **RF-07:** cada item muestra una imagen de portada como medio predeterminado, junto con un titular y una bajada.
 - **RF-08:** el texto sobre la imagen debe conservar legibilidad; el tratamiento visual específico se definirá en la etapa de diseño.
-- **RF-09:** los controles permiten ir al evento anterior o siguiente y activar la reproducción.
+- **RF-09:** los controles permiten ir al item anterior o siguiente y activar la reproducción.
 - **RF-10:** la interfaz ofrece acceso a detalles ampliados, ocultos por defecto.
 - **RF-11:** cuando exista un video de fondo, su reproducción se activa explícitamente; no debe iniciarse automáticamente al mostrar el evento.
 - **RF-12:** la zona superior presenta el contexto semántico a la izquierda y el contexto temporal a la derecha.
 - **RF-13:** la representación temporal depende del contexto: calendario para periodos contemporáneos y línea temporal para referencias históricas.
-- **RF-14:** un calendario puede representar rangos y destacar el periodo asociado al evento sin requerir una imagen de calendario independiente.
+- **RF-14:** un calendario puede representar rangos y destacar el periodo asociado al item sin requerir una imagen de calendario independiente.
+
+### Vault
+
+- **RF-19:** el Vault debe listar items identificados y permitir consultar su detalle y slides. La acción para agregar items se muestra inactiva en esta etapa.
 
 ### Contenido, clasificación y persistencia
 
-- **RF-15:** el contenido inicial puede organizarse en el filesystem, con recursos asociados a cada evento.
+- **RF-15:** el contenido inicial puede organizarse en el filesystem, con recursos asociados a cada item.
 - **RF-16:** debe existir una operación de sincronización explícita que concilie el contenido del filesystem con la persistencia local.
-- **RF-17:** la persistencia conserva el contenido y los datos estructurados necesarios para reproducir eventos y sesiones.
+- **RF-17:** la persistencia conserva el contenido y los datos estructurados necesarios para reproducir items y sesiones.
 - **RF-18:** la clasificación debe poder evolucionar sin codificar una taxonomía cerrada en la interfaz.
 
 ## 6. Requisitos de arquitectura y experiencia
@@ -128,17 +131,18 @@ El stack queda definido como **Python + FastAPI + React + TypeScript**. Las deci
 
 ## 9. Modelo de datos inicial
 
-La primera estructura relacional se mantiene explícita y pequeña:
+La estructura relacional mantiene explícita la jerarquía de navegación y separa los items reutilizables:
 
 - `projects`: proyectos que agrupan cursos.
 - `courses`: cursos asociados directamente a un proyecto.
 - `sessions`: sesiones ordenadas por curso.
-- `milestones`: hitos/eventos ordenados dentro de una sesión.
-- `slides`: contenido ordenado dentro de un hito.
+- `items`: unidades/eventos reutilizables, con título, resumen e identificador estable.
+- `session_items`: relación muchos-a-muchos ordenada entre sesiones e items.
+- `slides`: contenido ordenado perteneciente a un item.
 - `categories`: taxonomía jerárquica independiente de la jerarquía de cursos.
-- `milestone_categories`: relación muchos-a-muchos entre hitos y categorías.
+- `item_categories`: relación muchos-a-muchos entre items y categorías.
 
-El proyecto demo es **Desafío Latam** y agrupa los cursos **IA para marketing** y **Marketing & automatizaciones**. Este último contiene cuatro sesiones; la primera tiene dos hitos y cuatro slides por hito, y las otras tres sesiones quedan vacías. El seed demuestra esta estructura, no fija la taxonomía temática del producto. Las colecciones configurables y el almacenamiento/sincronización de medios quedan fuera del scaffold inicial.
+El proyecto demo es **Desafío Latam** y agrupa los cursos **IA para marketing** y **Marketing & automatizaciones**. Este último contiene cuatro sesiones; la primera utiliza dos items —NVIDIA y Adobe— con cuatro slides cada uno, y las otras tres sesiones quedan vacías. El seed demuestra esta estructura, no fija la taxonomía temática del producto. Las colecciones configurables y el almacenamiento/sincronización de medios quedan fuera del scaffold inicial.
 
 En esta etapa, la portada del reproductor es un bloque gris sin archivo multimedia. La navegación atrás/adelante opera sobre los ocho slides; Play se muestra desactivado hasta que se definan el avance automático y el comportamiento al final de la sesión.
 
@@ -160,10 +164,11 @@ El primer hito de producto se considerará definido cuando:
 
 1. Se puedan consultar proyectos y navegar por la jerarquía proyecto → curso → sesión.
 2. Los estados vacíos sean distinguibles para proyectos sin cursos y cursos sin sesiones.
-3. Se pueda abrir una sesión y recorrer sus eventos en orden.
+3. Se pueda abrir una sesión y recorrer sus items y slides en orden.
 4. La vista de reproducción muestre la composición fullscreen acordada, inicialmente con bloques grises.
-5. Los medios, textos editoriales y contextos temporales de los eventos puedan representarse sin fijar una taxonomía visual inmutable.
-6. Se haya acordado e implementado la persistencia local y la relación de reproducción entre sesiones y eventos.
+5. El Vault permita consultar los items disponibles y sus slides, sin habilitar la creación de items.
+6. Los medios, textos editoriales y contextos temporales de los items puedan representarse sin fijar una taxonomía visual inmutable.
+7. Se haya implementado la persistencia local y la relación reutilizable y ordenada entre sesiones e items.
 
 Los detalles de sincronización, validación de archivos y comportamiento ante conflictos deberán especificarse en el SDD antes de implementarse.
 
@@ -174,7 +179,7 @@ Los detalles de sincronización, validación de archivos y comportamiento ante c
 - Cobertura de pruebas automatizadas para API y componentes.
 - Formato, estructura y reglas de validación del contenido local.
 - Comportamiento exacto de sincronización y resolución de conflictos o eliminaciones.
-- Modelo de relaciones entre sesiones, eventos, categorías, etiquetas y periodos temporales.
+- Definición futura de etiquetas y periodos temporales para los items.
 - Reglas para mostrar calendario frente a línea temporal histórica.
 - Comportamiento de final de sesión, autoplay y loop.
 - Alcance y permisos del CMS futuro.

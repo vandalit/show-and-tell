@@ -20,13 +20,13 @@ class Base(DeclarativeBase):
     pass
 
 
-milestone_categories = Table(
-    "milestone_categories",
+item_categories = Table(
+    "item_categories",
     Base.metadata,
     Column(
-        "milestone_id",
+        "item_id",
         Uuid(as_uuid=True),
-        ForeignKey("milestones.id", ondelete="CASCADE"),
+        ForeignKey("items.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     Column(
@@ -83,40 +83,55 @@ class LearningSession(Base):
     )
 
     course: Mapped[Course] = relationship(back_populates="sessions")
-    milestones: Mapped[list[Milestone]] = relationship(
-        back_populates="session", order_by="Milestone.position", cascade="all, delete-orphan"
+    session_items: Mapped[list[SessionItem]] = relationship(
+        back_populates="session",
+        order_by="SessionItem.position",
+        cascade="all, delete-orphan",
     )
 
 
-class Milestone(Base):
-    __tablename__ = "milestones"
-    __table_args__ = (
-        UniqueConstraint("session_id", "position", name="uq_milestones_session_position"),
-        CheckConstraint("position >= 0", name="ck_milestones_position_nonnegative"),
-    )
+class Item(Base):
+    __tablename__ = "items"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    position: Mapped[int] = mapped_column(Integer, nullable=False)
-    session_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True
-    )
 
-    session: Mapped[LearningSession] = relationship(back_populates="milestones")
+    session_items: Mapped[list[SessionItem]] = relationship(
+        back_populates="item", cascade="all, delete-orphan"
+    )
     slides: Mapped[list[Slide]] = relationship(
-        back_populates="milestone", order_by="Slide.position", cascade="all, delete-orphan"
+        back_populates="item", order_by="Slide.position", cascade="all, delete-orphan"
     )
     categories: Mapped[list[Category]] = relationship(
-        secondary=milestone_categories, back_populates="milestones", order_by="Category.name"
+        secondary=item_categories, back_populates="items", order_by="Category.name"
     )
+
+
+class SessionItem(Base):
+    __tablename__ = "session_items"
+    __table_args__ = (
+        UniqueConstraint("session_id", "position", name="uq_session_items_session_position"),
+        CheckConstraint("position >= 0", name="ck_session_items_position_nonnegative"),
+    )
+
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True
+    )
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("items.id", ondelete="CASCADE"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    session: Mapped[LearningSession] = relationship(back_populates="session_items")
+    item: Mapped[Item] = relationship(back_populates="session_items")
 
 
 class Slide(Base):
     __tablename__ = "slides"
     __table_args__ = (
-        UniqueConstraint("milestone_id", "position", name="uq_slides_milestone_position"),
+        UniqueConstraint("item_id", "position", name="uq_slides_item_position"),
         CheckConstraint("position >= 0", name="ck_slides_position_nonnegative"),
     )
 
@@ -125,11 +140,11 @@ class Slide(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
     body: Mapped[str] = mapped_column(Text, nullable=False, default="")
     position: Mapped[int] = mapped_column(Integer, nullable=False)
-    milestone_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("milestones.id", ondelete="CASCADE"), nullable=False, index=True
+    item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("items.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
-    milestone: Mapped[Milestone] = relationship(back_populates="slides")
+    item: Mapped[Item] = relationship(back_populates="slides")
 
 
 class Category(Base):
@@ -146,6 +161,6 @@ class Category(Base):
         back_populates="children", remote_side="Category.id"
     )
     children: Mapped[list[Category]] = relationship(back_populates="parent")
-    milestones: Mapped[list[Milestone]] = relationship(
-        secondary=milestone_categories, back_populates="categories"
+    items: Mapped[list[Item]] = relationship(
+        secondary=item_categories, back_populates="categories"
     )

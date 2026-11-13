@@ -8,7 +8,7 @@ import styles from "./PlayerPage.module.css";
 
 interface PlayerItem {
   slide: Slide;
-  milestoneTitle: string;
+  itemTitle: string;
   categories: string[];
 }
 
@@ -30,11 +30,11 @@ export default function PlayerPage() {
 
   const items = useMemo<PlayerItem[]>(
     () =>
-      session?.milestones.flatMap((milestone) =>
-        milestone.slides.map((slide) => ({
+      session?.items.flatMap(({ item }) =>
+        item.slides.map((slide) => ({
           slide,
-          milestoneTitle: milestone.title,
-          categories: milestone.categories.map((category) => category.name),
+          itemTitle: item.title,
+          categories: item.categories.map((category) => category.name),
         })),
       ) ?? [],
     [session],
@@ -87,7 +87,7 @@ export default function PlayerPage() {
       </div>
       <header className={styles.topBar}>
         <div className={styles.context}>
-          <strong>{currentItem.milestoneTitle}</strong>
+          <strong>{currentItem.itemTitle}</strong>
           <span>{currentItem.categories.join(" · ")}</span>
         </div>
         <div className={styles.timelinePlaceholder} aria-label="Espacio para contexto temporal" />

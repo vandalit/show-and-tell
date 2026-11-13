@@ -23,15 +23,28 @@ class CategoryRead(BaseModel):
     slug: str
 
 
-class MilestoneRead(BaseModel):
+class ItemRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    slug: str
     title: str
     summary: str
-    position: int
     categories: list[CategoryRead]
     slides: list[SlideRead]
+
+
+class ItemSummaryRead(BaseModel):
+    id: UUID
+    slug: str
+    title: str
+    summary: str
+    slide_count: int
+
+
+class SessionItemRead(BaseModel):
+    position: int
+    item: ItemRead
 
 
 class ProjectSummaryRead(BaseModel):
@@ -58,7 +71,7 @@ class SessionRead(BaseModel):
     title: str
     description: str
     position: int
-    milestones: list[MilestoneRead]
+    items: list[SessionItemRead]
     course: CourseBreadcrumbRead
 
 
