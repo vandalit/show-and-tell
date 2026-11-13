@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database import SessionLocal
-from app.models import Category, Course, CourseGroup, LearningSession, Milestone, Slide
+from app.models import Category, Course, LearningSession, Milestone, Project, Slide
 
 
 def get_or_create(model, defaults: dict, **filters):
@@ -16,27 +16,58 @@ def get_or_create(model, defaults: dict, **filters):
 
 
 def seed() -> None:
-    root_group_id = get_or_create(
-        CourseGroup, {"slug": "programa-educativo", "name": "Programa educativo"}, slug="programa-educativo"
-    )
-    topic_group_id = get_or_create(
-        CourseGroup,
+    project_id = get_or_create(
+        Project,
         {
-            "slug": "tecnologia-y-mercados",
-            "name": "Tecnología y mercados",
-            "parent_id": root_group_id,
+            "slug": "desafio-latam",
+            "name": "Desafío Latam",
+            "description": "Proyecto educativo de demostración.",
         },
-        slug="tecnologia-y-mercados",
+        slug="desafio-latam",
     )
-    course_id = get_or_create(
+    get_or_create(
+        Project,
+        {
+            "slug": "adalid",
+            "name": "Adalid",
+            "description": "",
+        },
+        slug="adalid",
+    )
+    with SessionLocal() as db:
+        marketing_course = db.scalar(
+            select(Course).where(
+                Course.slug.in_(
+                    ("marketing-automatizaciones", "panorama-tecnologico")
+                )
+            )
+        )
+        if marketing_course is None:
+            marketing_course = Course(
+                slug="marketing-automatizaciones",
+                title="Marketing & automatizaciones",
+                description="Curso de demostración.",
+                project_id=project_id,
+            )
+            db.add(marketing_course)
+        else:
+            marketing_course.slug = "marketing-automatizaciones"
+            marketing_course.title = "Marketing & automatizaciones"
+            marketing_course.description = "Curso de demostración."
+            marketing_course.project_id = project_id
+        db.commit()
+        db.refresh(marketing_course)
+        marketing_course_id = marketing_course.id
+
+    get_or_create(
         Course,
         {
-            "slug": "panorama-tecnologico",
-            "title": "Panorama tecnológico",
-            "description": "Curso demostrativo para explorar la organización de sesiones.",
-            "group_id": topic_group_id,
+            "slug": "ia-para-marketing",
+            "title": "IA para marketing",
+            "description": "Curso de demostración.",
+            "project_id": project_id,
         },
-        slug="panorama-tecnologico",
+        slug="ia-para-marketing",
     )
 
     session_specs = [
@@ -53,7 +84,7 @@ def seed() -> None:
                 "title": title,
                 "description": "Sesión demostrativa." if position == 0 else "",
                 "position": position,
-                "course_id": course_id,
+                "course_id": marketing_course_id,
             },
             slug=slug,
         )

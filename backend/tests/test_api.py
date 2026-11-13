@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import get_db
 from app.main import app
-from app.models import Base, Category, Course, CourseGroup, LearningSession, Milestone, Slide
+from app.models import Base, Category, Course, LearningSession, Milestone, Project, Slide
 
 
 @pytest.fixture
@@ -26,8 +26,10 @@ def client():
 
     app.dependency_overrides[get_db] = override_get_db
     with Session(engine) as db:
-        group = CourseGroup(slug="root", name="Root")
-        course = Course(slug="course", title="Course", group=group)
+        project = Project(slug="project", name="Project")
+        db.add(Project(slug="empty-project", name="Adalid"))
+        course = Course(slug="course", title="Course", project=project)
+        Course(slug="course-2", title="Course 2", project=project)
         session = LearningSession(
             slug="session",
             title="Session",
@@ -48,7 +50,7 @@ def client():
                 Slide(title="Slide 2", position=1),
             ]
         )
-        db.add(group)
+        db.add(project)
         db.commit()
 
     with TestClient(app) as test_client:
@@ -58,18 +60,41 @@ def client():
     engine.dispose()
 
 
-def test_dashboard_returns_course_hierarchy_and_slide_counts(client: TestClient) -> None:
-    response = client.get("/api/dashboard")
+def test_projects_endpoint_lists_projects(client: TestClient) -> None:
+    response = client.get("/api/projects")
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload[0]["name"] == "Root"
-    assert payload[0]["courses"][0]["title"] == "Course"
-    assert payload[0]["courses"][0]["sessions"][0]["slide_count"] == 2
+    assert [project["name"] for project in payload] == ["Adalid", "Project"]
+    assert payload[0]["course_count"] == 0
+
+
+def test_project_course_and_session_navigation_data(client: TestClient) -> None:
+    projects = client.get("/api/projects").json()
+    project_id = next(project["id"] for project in projects if project["name"] == "Project")
+
+    project_response = client.get(f"/api/projects/{project_id}")
+    assert project_response.status_code == 200
+    project = project_response.json()
+    assert [course["title"] for course in project["courses"]] == ["Course", "Course 2"]
+    course_id = project["courses"][0]["id"]
+
+    course_response = client.get(f"/api/courses/{course_id}")
+    assert course_response.status_code == 200
+    course = course_response.json()
+    assert course["project"]["id"] == project_id
+    assert course["sessions"][0]["slide_count"] == 2
+
+    session_response = client.get(f"/api/sessions/{course['sessions'][0]['id']}")
+    assert session_response.status_code == 200
+    assert session_response.json()["course"]["project"]["name"] == "Project"
 
 
 def test_player_returns_ordered_slides_and_categories(client: TestClient) -> None:
-    session_id = client.get("/api/dashboard").json()[0]["courses"][0]["sessions"][0]["id"]
+    projects = client.get("/api/projects").json()
+    project = next(project for project in projects if project["name"] == "Project")
+    session_id = client.get(f"/api/projects/{project['id']}").json()["courses"][0]["id"]
+    session_id = client.get(f"/api/courses/{session_id}").json()["sessions"][0]["id"]
 
     response = client.get(f"/api/sessions/{session_id}")
 

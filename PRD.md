@@ -43,8 +43,8 @@ Estos conceptos describen el producto; no prescriben todavía un esquema de base
 ### Incluido
 
 - Persistencia local con PostgreSQL, ejecutada mediante Docker.
-- Un dashboard que muestre las sesiones disponibles.
-- Navegación desde el dashboard a la reproducción de una sesión.
+- Un dashboard de entrada que muestre los proyectos disponibles.
+- Navegación desde un proyecto a sus cursos, desde un curso a sus sesiones y desde una sesión a reproducción.
 - Una vista de reproducción fullscreen, inicialmente como wireframe de bloques grises.
 - Recorrido secuencial de los eventos de la sesión mediante controles anterior y siguiente.
 - Presentación de imagen de portada, titular y bajada.
@@ -69,29 +69,30 @@ Estos conceptos describen el producto; no prescriben todavía un esquema de base
 
 ### Sesiones y dashboard
 
-- **RF-01:** el sistema debe presentar un listado de sesiones persistidas.
-- **RF-02:** el usuario debe poder abrir una sesión para reproducirla.
-- **RF-03:** la reproducción debe respetar el orden de eventos definido para esa sesión.
-- **RF-04:** una sesión puede reutilizar eventos que aparezcan en otras sesiones.
+- **RF-01:** el sistema debe presentar los proyectos disponibles como nivel inicial de navegación.
+- **RF-02:** el usuario debe poder navegar desde un proyecto a sus cursos y desde un curso a sus sesiones.
+- **RF-03:** el usuario debe poder abrir una sesión para reproducirla.
+- **RF-04:** la reproducción debe respetar el orden de eventos definido para esa sesión.
+- **RF-05:** una sesión puede reutilizar eventos que aparezcan en otras sesiones.
 
 ### Reproducción
 
-- **RF-05:** la sesión se presenta en una vista fullscreen.
-- **RF-06:** cada evento muestra una imagen de portada como medio predeterminado, junto con un titular y una bajada.
-- **RF-07:** el texto sobre la imagen debe conservar legibilidad; el tratamiento visual específico se definirá en la etapa de diseño.
-- **RF-08:** los controles permiten ir al evento anterior o siguiente y activar la reproducción.
-- **RF-09:** la interfaz ofrece acceso a detalles ampliados, ocultos por defecto.
-- **RF-10:** cuando exista un video de fondo, su reproducción se activa explícitamente; no debe iniciarse automáticamente al mostrar el evento.
-- **RF-11:** la zona superior presenta el contexto semántico a la izquierda y el contexto temporal a la derecha.
-- **RF-12:** la representación temporal depende del contexto: calendario para periodos contemporáneos y línea temporal para referencias históricas.
-- **RF-13:** un calendario puede representar rangos y destacar el periodo asociado al evento sin requerir una imagen de calendario independiente.
+- **RF-06:** la sesión se presenta en una vista fullscreen.
+- **RF-07:** cada evento muestra una imagen de portada como medio predeterminado, junto con un titular y una bajada.
+- **RF-08:** el texto sobre la imagen debe conservar legibilidad; el tratamiento visual específico se definirá en la etapa de diseño.
+- **RF-09:** los controles permiten ir al evento anterior o siguiente y activar la reproducción.
+- **RF-10:** la interfaz ofrece acceso a detalles ampliados, ocultos por defecto.
+- **RF-11:** cuando exista un video de fondo, su reproducción se activa explícitamente; no debe iniciarse automáticamente al mostrar el evento.
+- **RF-12:** la zona superior presenta el contexto semántico a la izquierda y el contexto temporal a la derecha.
+- **RF-13:** la representación temporal depende del contexto: calendario para periodos contemporáneos y línea temporal para referencias históricas.
+- **RF-14:** un calendario puede representar rangos y destacar el periodo asociado al evento sin requerir una imagen de calendario independiente.
 
 ### Contenido, clasificación y persistencia
 
-- **RF-14:** el contenido inicial puede organizarse en el filesystem, con recursos asociados a cada evento.
-- **RF-15:** debe existir una operación de sincronización explícita que concilie el contenido del filesystem con la persistencia local.
-- **RF-16:** la persistencia conserva el contenido y los datos estructurados necesarios para reproducir eventos y sesiones.
-- **RF-17:** la clasificación debe poder evolucionar sin codificar una taxonomía cerrada en la interfaz.
+- **RF-15:** el contenido inicial puede organizarse en el filesystem, con recursos asociados a cada evento.
+- **RF-16:** debe existir una operación de sincronización explícita que concilie el contenido del filesystem con la persistencia local.
+- **RF-17:** la persistencia conserva el contenido y los datos estructurados necesarios para reproducir eventos y sesiones.
+- **RF-18:** la clasificación debe poder evolucionar sin codificar una taxonomía cerrada en la interfaz.
 
 ## 6. Requisitos de arquitectura y experiencia
 
@@ -129,15 +130,15 @@ El stack queda definido como **Python + FastAPI + React + TypeScript**. Las deci
 
 La primera estructura relacional se mantiene explícita y pequeña:
 
-- `course_groups`: grupos de cursos con relación padre/hijo para representar jerarquías.
-- `courses`: cursos asociados a un grupo.
+- `projects`: proyectos que agrupan cursos.
+- `courses`: cursos asociados directamente a un proyecto.
 - `sessions`: sesiones ordenadas por curso.
 - `milestones`: hitos/eventos ordenados dentro de una sesión.
 - `slides`: contenido ordenado dentro de un hito.
 - `categories`: taxonomía jerárquica independiente de la jerarquía de cursos.
 - `milestone_categories`: relación muchos-a-muchos entre hitos y categorías.
 
-La primera sesión contiene dos hitos y cuatro slides por hito. Se crean otras tres sesiones vacías. El seed demuestra esta estructura, no fija el contenido ni la taxonomía del producto. Las colecciones configurables y el almacenamiento/sincronización de medios quedan fuera del scaffold inicial.
+El proyecto demo es **Desafío Latam** y agrupa los cursos **IA para marketing** y **Marketing & automatizaciones**. Este último contiene cuatro sesiones; la primera tiene dos hitos y cuatro slides por hito, y las otras tres sesiones quedan vacías. El seed demuestra esta estructura, no fija la taxonomía temática del producto. Las colecciones configurables y el almacenamiento/sincronización de medios quedan fuera del scaffold inicial.
 
 En esta etapa, la portada del reproductor es un bloque gris sin archivo multimedia. La navegación atrás/adelante opera sobre los ocho slides; Play se muestra desactivado hasta que se definan el avance automático y el comportamiento al final de la sesión.
 
@@ -157,11 +158,12 @@ Estas ideas requieren definición y validación antes de incorporarse al alcance
 
 El primer hito de producto se considerará definido cuando:
 
-1. Se pueda consultar el listado de sesiones persistidas desde el dashboard.
-2. Se pueda abrir una sesión y recorrer sus eventos en orden.
-3. La vista de reproducción muestre la composición fullscreen acordada, inicialmente con bloques grises.
-4. Los medios, textos editoriales y contextos temporales de los eventos puedan representarse sin fijar una taxonomía visual inmutable.
-5. Se haya acordado e implementado la persistencia local y la relación de reproducción entre sesiones y eventos.
+1. Se puedan consultar proyectos y navegar por la jerarquía proyecto → curso → sesión.
+2. Los estados vacíos sean distinguibles para proyectos sin cursos y cursos sin sesiones.
+3. Se pueda abrir una sesión y recorrer sus eventos en orden.
+4. La vista de reproducción muestre la composición fullscreen acordada, inicialmente con bloques grises.
+5. Los medios, textos editoriales y contextos temporales de los eventos puedan representarse sin fijar una taxonomía visual inmutable.
+6. Se haya acordado e implementado la persistencia local y la relación de reproducción entre sesiones y eventos.
 
 Los detalles de sincronización, validación de archivos y comportamiento ante conflictos deberán especificarse en el SDD antes de implementarse.
 

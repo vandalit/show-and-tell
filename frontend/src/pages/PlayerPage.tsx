@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getSession } from "../api";
+import Breadcrumbs from "../components/Breadcrumbs";
 import LoadState from "../components/LoadState";
 import type { LearningSession, Slide } from "../types";
 import styles from "./PlayerPage.module.css";
@@ -39,13 +40,24 @@ export default function PlayerPage() {
     [session],
   );
   const currentItem = items[currentIndex];
+  const breadcrumbs = session
+    ? [
+        { label: "Proyectos", to: "/" },
+        {
+          label: session.course.project.name,
+          to: `/projects/${session.course.project.id}`,
+        },
+        { label: session.course.title, to: `/courses/${session.course.id}` },
+        { label: session.title },
+      ]
+    : [];
 
   if (error || !session) {
     return (
       <main className={styles.page}>
-        <Link className={styles.back} to="/">
-          ← Sesiones
-        </Link>
+        <div className={styles.navigation}>
+          <Link to="/">← Proyectos</Link>
+        </div>
         <LoadState error={error} />
       </main>
     );
@@ -54,9 +66,9 @@ export default function PlayerPage() {
   if (!currentItem) {
     return (
       <main className={styles.page}>
-        <Link className={styles.back} to="/">
-          ← Sesiones
-        </Link>
+        <div className={styles.navigation}>
+          <Breadcrumbs items={breadcrumbs} />
+        </div>
         <p className={styles.error}>Esta sesión todavía no tiene slides.</p>
       </main>
     );
@@ -70,9 +82,9 @@ export default function PlayerPage() {
 
   return (
     <main className={styles.page}>
-      <Link className={styles.back} to="/">
-        ← Sesiones
-      </Link>
+      <div className={styles.navigation}>
+        <Breadcrumbs items={breadcrumbs} />
+      </div>
       <header className={styles.topBar}>
         <div className={styles.context}>
           <strong>{currentItem.milestoneTitle}</strong>

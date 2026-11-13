@@ -2,13 +2,14 @@
 
 Show & Tell es un reproductor minimalista para presentar contenido educativo curado como una secuencia de eventos. Cada evento combina medios y contenido editorial con contexto semántico y temporal. Las sesiones seleccionan y ordenan eventos para una presentación; no tienen que incluir todo el catálogo.
 
-El proyecto avanza por etapas, con una primera estructura funcional intencionalmente mínima: persistencia local, dashboard de sesiones y reproductor en wireframe.
+El proyecto avanza por etapas, con una primera estructura funcional intencionalmente mínima: persistencia local, navegación desde proyectos hasta sesiones y reproductor en wireframe.
 
 ## Alcance inicial
 
 La primera experiencia funcional prevista contempla:
 
-- Un dashboard con el listado de sesiones disponibles.
+- Un dashboard de entrada con el listado de proyectos disponibles.
+- Navegación desde un proyecto a sus cursos, y desde un curso a sus sesiones.
 - La entrada a una sesión en modo de reproducción fullscreen.
 - Una composición wireframe en bloques grises para validar estructura, sin definir todavía la dirección visual.
 - Persistencia local en PostgreSQL, ejecutada con Docker.
@@ -30,12 +31,12 @@ La edición de sesiones y contenido queda fuera del primer alcance de reproducci
 
 ## Estructura de datos inicial
 
-- Los grupos de cursos pueden anidarse; un curso pertenece a un grupo y contiene sesiones ordenadas.
+- Los proyectos contienen cursos; un curso pertenece a un proyecto y contiene sesiones ordenadas.
 - Una sesión contiene hitos/eventos ordenados; cada hito contiene slides ordenados.
 - Las categorías tienen jerarquía propia y se asignan a hitos.
 - Las colecciones configurables y los medios del filesystem quedan fuera de esta primera estructura.
 
-El seed incluye un curso, cuatro sesiones y dos hitos con cuatro slides cada uno en la primera sesión. Las otras sesiones quedan vacías. El contenido es demostrativo y debe completarse con fuentes verificadas antes de usarlo como material educativo.
+El seed incluye los proyectos **Desafío Latam** y **Adalid**. Desafío Latam contiene los cursos **IA para marketing** y **Marketing & automatizaciones**; este último contiene cuatro sesiones. La primera sesión tiene dos hitos con cuatro slides cada uno y las otras sesiones quedan vacías. Adalid no tiene cursos para probar el estado vacío. El contenido es demostrativo y debe completarse con fuentes verificadas antes de usarlo como material educativo.
 
 ## Desarrollo local
 
@@ -68,7 +69,7 @@ Requisitos: Python 3.12+, Node.js 20+ y Docker Compose.
    npm run dev
    ```
 
-La API expone `GET /api/health`, `GET /api/dashboard` y `GET /api/sessions/{id}`. El reproductor ocupa la ventana, usa un bloque gris en lugar de medios y permite navegar slides; el control Play está visible pero desactivado hasta definir el comportamiento de reproducción. No hay sincronización de archivos ni edición de contenido en esta etapa. Las credenciales de Compose son solo para desarrollo local.
+La API expone `GET /api/health`, `GET /api/projects`, `GET /api/projects/{id}`, `GET /api/courses/{id}` y `GET /api/sessions/{id}`. La navegación del frontend va de proyectos a cursos, sesiones y reproductor, con breadcrumbs en los niveles de detalle. El reproductor ocupa la ventana, usa un bloque gris en lugar de medios y permite navegar slides; el control Play está visible pero desactivado hasta definir el comportamiento de reproducción. No hay sincronización de archivos ni edición de contenido en esta etapa. Las credenciales de Compose son solo para desarrollo local.
 
 ## Documentación
 

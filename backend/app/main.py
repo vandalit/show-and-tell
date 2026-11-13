@@ -8,8 +8,14 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.config import settings
 from app.database import get_db
-from app.models import Course, CourseGroup, LearningSession, Milestone
-from app.schemas import CourseGroupRead, SessionRead
+from app.models import Course, LearningSession, Milestone, Project
+from app.schemas import (
+    CourseRead,
+    CourseSummaryRead,
+    ProjectRead,
+    ProjectSummaryWithCourseCountRead,
+    SessionRead,
+)
 
 app = FastAPI(title="Show & Tell API", version="0.1.0")
 app.add_middleware(
@@ -27,56 +33,90 @@ def health(db: Annotated[Session, Depends(get_db)]) -> dict[str, str]:
     return {"status": "ok", "database": "connected"}
 
 
-@app.get("/api/dashboard", response_model=list[CourseGroupRead])
-def dashboard(db: Annotated[Session, Depends(get_db)]) -> list[CourseGroupRead]:
-    groups = db.scalars(select(CourseGroup).order_by(CourseGroup.name)).all()
-    courses = db.scalars(
-        select(Course)
-        .options(
-            selectinload(Course.sessions)
-            .selectinload(LearningSession.milestones)
-            .selectinload(Milestone.slides)
-        )
-        .order_by(Course.title)
+@app.get("/api/projects", response_model=list[ProjectSummaryWithCourseCountRead])
+def list_projects(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[ProjectSummaryWithCourseCountRead]:
+    projects = db.scalars(
+        select(Project)
+        .options(selectinload(Project.courses))
+        .order_by(Project.name)
     ).all()
 
-    group_nodes: dict[UUID, dict] = {
-        group.id: {"id": group.id, "name": group.name, "children": [], "courses": []}
-        for group in groups
-    }
-    roots: list[dict] = []
+    return [
+        ProjectSummaryWithCourseCountRead(
+            id=project.id,
+            slug=project.slug,
+            name=project.name,
+            course_count=len(project.courses),
+        )
+        for project in projects
+    ]
 
-    for group in groups:
-        node = group_nodes[group.id]
-        if group.parent_id and group.parent_id in group_nodes:
-            group_nodes[group.parent_id]["children"].append(node)
-        else:
-            roots.append(node)
 
-    for course in courses:
-        node = group_nodes.get(course.group_id)
-        if node is not None:
-            node["courses"].append(
-                {
-                    "id": course.id,
-                    "slug": course.slug,
-                    "title": course.title,
-                    "sessions": [
-                        {
-                            "id": session.id,
-                            "slug": session.slug,
-                            "title": session.title,
-                            "position": session.position,
-                            "slide_count": sum(
-                                len(milestone.slides) for milestone in session.milestones
-                            ),
-                        }
-                        for session in course.sessions
-                    ],
-                }
+@app.get("/api/projects/{project_id}", response_model=ProjectRead)
+def get_project(
+    project_id: UUID, db: Annotated[Session, Depends(get_db)]
+) -> Project:
+    statement = (
+        select(Project)
+        .where(Project.id == project_id)
+        .options(selectinload(Project.courses).selectinload(Course.sessions))
+    )
+    project = db.scalar(statement)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return ProjectRead(
+        id=project.id,
+        slug=project.slug,
+        name=project.name,
+        description=project.description,
+        courses=[
+            CourseSummaryRead(
+                id=course.id,
+                slug=course.slug,
+                title=course.title,
+                session_count=len(course.sessions),
             )
+            for course in sorted(project.courses, key=lambda item: item.title)
+        ],
+    )
 
-    return [CourseGroupRead.model_validate(node) for node in roots]
+
+@app.get("/api/courses/{course_id}", response_model=CourseRead)
+def get_course(course_id: UUID, db: Annotated[Session, Depends(get_db)]) -> CourseRead:
+    statement = (
+        select(Course)
+        .where(Course.id == course_id)
+        .options(
+            selectinload(Course.project),
+            selectinload(Course.sessions)
+            .selectinload(LearningSession.milestones)
+            .selectinload(Milestone.slides),
+        )
+    )
+    course = db.scalar(statement)
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return CourseRead(
+        id=course.id,
+        slug=course.slug,
+        title=course.title,
+        description=course.description,
+        project=course.project,
+        sessions=[
+            {
+                "id": session.id,
+                "slug": session.slug,
+                "title": session.title,
+                "position": session.position,
+                "slide_count": sum(
+                    len(milestone.slides) for milestone in session.milestones
+                ),
+            }
+            for session in sorted(course.sessions, key=lambda item: item.position)
+        ],
+    )
 
 
 @app.get("/api/sessions/{session_id}", response_model=SessionRead)
@@ -91,6 +131,7 @@ def get_session(
             .selectinload(Milestone.slides),
             selectinload(LearningSession.milestones)
             .selectinload(Milestone.categories),
+            selectinload(LearningSession.course).selectinload(Course.project),
         )
     )
     session = db.scalar(statement)

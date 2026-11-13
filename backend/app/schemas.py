@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class SlideRead(BaseModel):
@@ -34,6 +34,22 @@ class MilestoneRead(BaseModel):
     slides: list[SlideRead]
 
 
+class ProjectSummaryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    slug: str
+    name: str
+
+
+class CourseBreadcrumbRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    title: str
+    project: ProjectSummaryRead
+
+
 class SessionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -43,6 +59,7 @@ class SessionRead(BaseModel):
     description: str
     position: int
     milestones: list[MilestoneRead]
+    course: CourseBreadcrumbRead
 
 
 class SessionSummaryRead(BaseModel):
@@ -53,20 +70,26 @@ class SessionSummaryRead(BaseModel):
     slide_count: int
 
 
-class CourseRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class CourseSummaryRead(BaseModel):
     id: UUID
     slug: str
     title: str
-    sessions: list[SessionSummaryRead]
+    session_count: int
 
 
-class CourseGroupRead(BaseModel):
+class ProjectSummaryWithCourseCountRead(ProjectSummaryRead):
+    course_count: int
+
+
+class ProjectRead(ProjectSummaryRead):
+    description: str
+    courses: list[CourseSummaryRead]
+
+
+class CourseRead(BaseModel):
     id: UUID
-    name: str
-    children: list[CourseGroupRead] = Field(default_factory=list)
-    courses: list[CourseRead] = Field(default_factory=list)
-
-
-CourseGroupRead.model_rebuild()
+    slug: str
+    title: str
+    description: str
+    project: ProjectSummaryRead
+    sessions: list[SessionSummaryRead]

@@ -1,15 +1,28 @@
 .page {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   min-height: 100vh;
   padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.navigation {
+  padding-bottom: var(--space-2);
+}
+
+.navigation a {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.navigation a:hover,
+.navigation a:focus-visible {
+  color: var(--color-text);
 }
 
 .topBar {
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
-  padding-left: 7rem;
   padding-bottom: var(--space-2);
 }
 
@@ -105,15 +118,6 @@
   line-height: 1.5;
 }
 
-.back {
-  position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
-  z-index: 1;
-  color: var(--color-muted);
-  text-decoration: none;
-}
-
 .error {
   margin: auto;
   color: #f0aaaa;
@@ -128,7 +132,4 @@
     flex-wrap: wrap;
   }
 
-  .topBar {
-    padding-left: 5.5rem;
-  }
 }

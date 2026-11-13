@@ -38,21 +38,15 @@ milestone_categories = Table(
 )
 
 
-class CourseGroup(Base):
-    __tablename__ = "course_groups"
+class Project(Base):
+    __tablename__ = "projects"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    parent_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("course_groups.id", ondelete="SET NULL"), nullable=True, index=True
-    )
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
-    parent: Mapped[CourseGroup | None] = relationship(
-        back_populates="children", remote_side="CourseGroup.id"
-    )
-    children: Mapped[list[CourseGroup]] = relationship(back_populates="parent")
-    courses: Mapped[list[Course]] = relationship(back_populates="group")
+    courses: Mapped[list[Course]] = relationship(back_populates="project")
 
 
 class Course(Base):
@@ -62,11 +56,11 @@ class Course(Base):
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    group_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("course_groups.id", ondelete="RESTRICT"), nullable=False, index=True
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
-    group: Mapped[CourseGroup] = relationship(back_populates="courses")
+    project: Mapped[Project] = relationship(back_populates="courses")
     sessions: Mapped[list[LearningSession]] = relationship(
         back_populates="course", order_by="LearningSession.position"
     )

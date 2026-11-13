@@ -28,6 +28,15 @@ export interface LearningSession {
   description: string;
   position: number;
   milestones: Milestone[];
+  course: {
+    id: string;
+    title: string;
+    project: {
+      id: string;
+      slug: string;
+      name: string;
+    };
+  };
 }
 
 export interface SessionSummary {
@@ -38,16 +47,27 @@ export interface SessionSummary {
   slide_count: number;
 }
 
-export interface Course {
+export interface CourseSummary {
   id: string;
   slug: string;
   title: string;
-  sessions: SessionSummary[];
+  session_count: number;
 }
 
-export interface CourseGroup {
+export interface ProjectSummary {
   id: string;
+  slug: string;
   name: string;
-  children: CourseGroup[];
-  courses: Course[];
+  course_count: number;
+}
+
+export interface Project extends ProjectSummary {
+  description: string;
+  courses: CourseSummary[];
+}
+
+export interface Course extends CourseSummary {
+  description: string;
+  project: Pick<ProjectSummary, "id" | "slug" | "name">;
+  sessions: SessionSummary[];
 }

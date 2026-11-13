@@ -1,4 +1,4 @@
-import type { CourseGroup, LearningSession } from "./types";
+import type { Course, LearningSession, Project, ProjectSummary } from "./types";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -10,8 +10,16 @@ async function getJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function getDashboard(): Promise<CourseGroup[]> {
-  return getJson("/api/dashboard");
+export function getProjects(): Promise<ProjectSummary[]> {
+  return getJson("/api/projects");
+}
+
+export function getProject(projectId: string): Promise<Project> {
+  return getJson(`/api/projects/${projectId}`);
+}
+
+export function getCourse(courseId: string): Promise<Course> {
+  return getJson(`/api/courses/${courseId}`);
 }
 
 export function getSession(sessionId: string): Promise<LearningSession> {
